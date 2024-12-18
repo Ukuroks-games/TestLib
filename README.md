@@ -1,3 +1,3 @@
-# Roblox project template
+# TestsLib
 
-Just template of project for roblox game for vscode
+Small library for creating unit tests.

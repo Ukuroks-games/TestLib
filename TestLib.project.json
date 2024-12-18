@@ -1,0 +1,14 @@
+{
+	"name": "TestLib",
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"$className": "ReplicatedStorage",
+			"$path": "src"
+		},
+		"Workspace": {
+			"$className": "Workspace",
+			"$path": "tests"
+		}
+	}
+}
