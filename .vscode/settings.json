@@ -16,5 +16,5 @@
 		"*.toml"	// ignore toml files
 	],
 
-	"luau-lsp.sourcemap.rojoProjectFile": "${workspaceFolderBasename}.project.json",
+	"luau-lsp.sourcemap.rojoProjectFile": "test.project.json"
 }

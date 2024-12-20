@@ -1,7 +1,28 @@
---[[
-	Сервисы
-]]
+--	Сервисы
+
+
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+
+--	Библиотеки
+
+
+--[[ 
+	Папка с пакетами 
+]]
+local Packages = ReplicatedStorage.Packages
+
+
+local stdlib = require(Packages.stdlib)
+
+local algorithm = stdlib.algorithm
+
+
+
+local test = require(script.Parent.test)
+
+
 
 --[[
 	Тестироующая библиотека
@@ -13,19 +34,25 @@ local tester = {}
 ]]
 tester.testsFolder = ReplicatedStorage:FindFirstChild("Tests")
 
+tester.Tests = {}
+
 --[[
-	
+	# Вывести результаты тестов
+
+	## Params:
+
+	`Tests` - Список тестов
 ]]
-function tester.EndOfTesting(Tests: {Folder})
+function tester.PrintTestsResults(Tests: {test.test})
 
 	local function GetPassedTestsNum()
-		local num = 0
-		
-		for _, v in pairs(Tests) do
-			if v:FindFirstChild("TestResult").Value then
-				num += 1
+		local num =	algorithm.count_if(
+			Tests, 
+			function(value: Folder): boolean 
+				local a = value:FindFirstChild("TestResult")
+				return a.Value
 			end
-		end
+		)
 		
 		return num
 	end
@@ -33,10 +60,9 @@ function tester.EndOfTesting(Tests: {Folder})
 	local passed = GetPassedTestsNum()
 
 	if passed == #Tests then
-		print("Tests is OK\n")
+		print("All test passed\n")
 	else
 		print("Tests failed:")
-
 
 		for _, v in pairs(Tests) do
 			if v:FindFirstChild("TestResult").Value == false then
@@ -53,17 +79,16 @@ end
 ]]
 function tester.Summary(self)
 
-
 	local Tests = {}
 
 	if self then
-		for i, v in pairs(self) do
-			if typeof(i) == "string" and typeof(v) == "Folder" then
-				table.insert(Tests, v)
-			end
-		end
+		Tests = self.Tests
 	else
-		Tests = tester.testsFolder:GetChildren()
+		local all:{Instance} = self.testsFolder:GetChildren()
+
+		for _, v in pairs(all) do
+			table.insert(Tests, test.fromFolder(v))
+		end
 	end
 
 	-- Если хоть один тест ещё запущен, ливаем
@@ -80,73 +105,25 @@ function tester.Summary(self)
 		end
 	end
 
-	tester.EndOfTesting(Tests)
+	tester.PrintTestsResults(Tests)
 end
 
-
-function tester.__call(testFunction: ()->boolean, TestName: string)
+--[[
+	Добавить тест
+]]
+function tester.AddTest(testFunction: ()->boolean, TestName: string, depends: {test.test}?): test.test
+	
 
 	if not tester.testsFolder then
 		tester.testsFolder = Instance.new("Folder", ReplicatedStorage)
 		tester.testsFolder.Name = "Tests"
 	end
 
-	--[[
-		Папка этого текста
-	]]
-	local testFolder = Instance.new("Folder", tester.testsFolder)
-	testFolder.Name = TestName
+	local Test = test.new(tester.testsFolder, TestName, testFunction, depends)
 
-	tester["TestName"] = testFolder
+	table.insert(tester.Tests, Test)
 
-	--[[
-		Результат теста.
-		Имеет значение только после того как тест был выполнен
-	]]
-	local TestResult = Instance.new("BoolValue", testFolder)
-	TestResult.Name = "TestResult"
-
-	--[[
-		Завершился ли тест
-	]]
-	local TestRunning = Instance.new("BoolValue", testFolder)
-	TestRunning.Name = "TestRunning"
-
-	local TimeStart: number
-	local TimeEnd: number
-
-	TestRunning.Changed:Connect(function(newValue: boolean) 
-		if newValue then
-			print("Test "..tostring(TestName).." started")
-		end
-	end)
-
-	TestResult.Changed:Connect(function(newValue: boolean) 
-		local str = "Test "..TestName.." "
-
-		if newValue then
-			str..= "passed"
-		else
-			str..= "failed"
-		end
-
-		str ..= "\nTime: "..tostring(os.difftime(TimeEnd, TimeStart))
-
-		if newValue then
-			print(str)
-		else
-			warn(str)
-		end
-	end)
-
-	task.spawn(function()
-
-		TestRunning.Value = true
-		TimeStart = os.time()
-		TestResult.Value = testFunction()
-		TimeEnd = os.time()
-		TestRunning.Value = false
-	end)
+	return Test
 end
 
 return tester

@@ -3,7 +3,7 @@ name = "egor00f/testlib"
 
 description = "Small unit tests library"
 
-version = "0.1.0"
+version = "0.1.1"
 
 registry = "https://github.com/UpliftGames/wally-index"
 
@@ -16,12 +16,12 @@ repository = "https://github.com/Ukuroks-games/TestLib"
 
 authors = ["Egor00f <velikiydolbayeb@gmail.com>"]
 
-exclude = ["TestLib.rbxl"]
+exclude = ["TestLib test.rbxl", "test.project.json"]
 
 private = false
 
 [dependencies]
-
+stdlib = "egor00f/stdlib@0.1.2"
 
 [server-dependencies]
 

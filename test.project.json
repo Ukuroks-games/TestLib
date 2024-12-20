@@ -1,0 +1,19 @@
+{
+  "name": "TestLib test",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Packages": {
+        "$path": "Packages"
+      },
+      "shared": {
+        "$path": "src"
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$path": "tests"
+    }
+  }
+}

@@ -1,9 +1,37 @@
-local tester = require(game:GetService("ReplicatedStorage").tester)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-tester(function() return true end, "True Test1")
-tester(function() return true end, "True Test2")
-tester(function() return false end, "False Test1")
-tester(function() return false end, "False Test2")
+local tester = require(ReplicatedStorage.shared.tester)
+
+local t = tester.AddTest(
+	function() 
+		return true 
+	end, 
+	"True Test1")
+tester.AddTest(
+	function() 
+		return true 
+	end, 
+	"True Test2"
+)
+tester.AddTest(
+	function() 
+		return false 
+	end,
+	"False Test1")
+tester.AddTest(
+	function() 
+		return false 
+	end,
+	"False Test2")
+tester.AddTest(
+	function(): boolean 
+		return true
+	end,
+	"Depend Test",
+	{
+		t
+	}
+)
 
 -- Результаты только для тестов этого скрипта
 tester:Summary()
