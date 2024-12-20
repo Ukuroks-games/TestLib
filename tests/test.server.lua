@@ -2,28 +2,28 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local tester = require(ReplicatedStorage.shared.tester)
 
-local t = tester.AddTest(
+local t = tester:AddTest(
 	function() 
 		return true 
 	end, 
 	"True Test1")
-tester.AddTest(
+tester:AddTest(
 	function() 
 		return true 
 	end, 
 	"True Test2"
 )
-tester.AddTest(
+tester:AddTest(
 	function() 
 		return false 
 	end,
 	"False Test1")
-tester.AddTest(
+tester:AddTest(
 	function() 
 		return false 
 	end,
 	"False Test2")
-tester.AddTest(
+tester:AddTest(
 	function(): boolean 
 		return true
 	end,

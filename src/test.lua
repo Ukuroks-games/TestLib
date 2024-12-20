@@ -21,28 +21,33 @@ export type test = typeof(setmetatable(
 		--[[
 			Функция теста
 		]]
-		TestFunc: ()->boolean,
+		Func: ()->boolean,
 
 		--[[
 			папка теста
 		]]
-		testFolder: Folder,
+		Folder: Folder,
 		
 		--[[
 			Результат теста.
 			Имеет значение только после того как тест был выполнен
 		]]
-		TestResult: BoolValue,
+		Result: BoolValue,
 
 		--[[
 			Завершился ли тест
 		]]
-		TestDone: BoolValue,
+		Done: BoolValue,
+
+		--[[
+			Запущен ли сейчас тест
+		]]
+		Running: BoolValue,
 
 		--[[
 			Время выполнения теста
 		]]
-		TestTime: NumberValue
+		Time: NumberValue
 	}, 
 	testClass
 ))
@@ -59,28 +64,31 @@ function test.new(Parent: Folder, name: string, func: ()->boolean, depends: {tes
 		{
 			Name = name,
 			Depends = depends or {},
-			TestFunc = func,
-			TestResult = Instance.new("BoolValue", testFolder),
-			TestDone = Instance.new("BoolValue", testFolder),
-			TestTime = Instance.new("NumberValue", testFolder),
+			Func = func,
+			Result = Instance.new("BoolValue", testFolder),
+			Done = Instance.new("BoolValue", testFolder),
+			Time = Instance.new("NumberValue", testFolder),
+			Running = Instance.new("NumberValue", testFolder),
 			testFolder = testFolder
 		},	testClass
 	)
 
-	self.TestResult.Name = "TestResult"
-	self.TestDone.Name = "TestDone"
-	self.TestTime.Name = "TestTime"
+	self.Result.Name = "Result"
+	self.Done.Name = "Done"
+	self.Time.Name = "Time"
+	self.Running.Name = "Running"
 
-	self.TestResult.Value = false
-	self.TestDone.Value = false
+	self.Result.Value = false
+	self.Running.Value = false
+	self.Done.Value = false
 
-	self.TestDone.Changed:Connect(function(newValue: boolean) 
+	self.Running.Changed:Connect(function(newValue: boolean) 
 		if newValue then
 			print("Test "..tostring(self.Name).." started")
 		end
 	end)
 
-	self.TestResult.Changed:Connect(function() 
+	self.Result.Changed:Connect(function() 
 		print(tostring(self))
 	end)
 
@@ -89,15 +97,20 @@ end
 
 --[[
 	# Создать тест из папки
+
+	## Warning:
+
+	создаёт обрезаный тест (без функции и зависимостей)
 ]]
 function test.fromFolder(folder: Folder): test
-	
+
 	local self = setmetatable(
 		{
 			Name = folder.Name,
-			TestResult = folder:FindFirstChild("TestResult"),
-			TestDone = folder:FindFirstChild("TestRunning"),
-			TestTime = folder:FindFirstChild("TestTime"),
+			Result = folder:FindFirstChild("Result"),
+			Done = folder:FindFirstChild("Running"),
+			Time = folder:FindFirstChild("Time"),
+			Running = folder:FindFirstChild("Running"),
 			testFolder = folder
 		}, 
 		test
@@ -109,49 +122,66 @@ end
 --[[
 	# Запустить тест
 ]]
-function testClass.RunTest(self: test): boolean
+function testClass.Run(self: test): boolean
+	
+	if self.Running.Value then	-- тест уже запущен
+		self.Result.Changed:Wait()	-- ждемс конца
+		return self.Result.Value
+	end
 
-	local result: boolean
+	if self.Done.Value then	-- тест уже БЫЛ запущен
+		return self.Result.Value
+	end
 
-	for _, v in pairs(self.Depends) do
-		result = testClass.RunTest(v)
-		if not result then
-			break
+	
+	self.Running.Value = true
+
+	for _, v in pairs(self.Depends) do	-- Запуск завивимостей
+		if not testClass.Run(v) then
+			return false
 		end
 	end
 
+
+	-- Результат запуска теста
+	local result: boolean
+
+	-- Время запуска функции
 	local TimeStart: number
+
+	-- время конца функции
 	local TimeEnd: number
 
-	self.TestRunning.Value = true
 
 	TimeStart = os.time()
 
-	result = self.TestFunc()
+	result = self.Func()	-- Запуск функции
 
 	TimeEnd = os.time()
 
-	self.TestResult.Value = result
-	self.TestTime.Value = os.difftime(TimeEnd, TimeStart)
-	self.TestRunning.Value = false
+	self.Time.Value = os.difftime(TimeEnd, TimeStart)	-- расчёт времени функции
+	self.Result.Value = result
+	self.Running.Value = false
+	self.Done.Value = true	-- Все! тест кончился
 
 	return result
+
 end
 
 function testClass.__tostring(self: test)
 	
 	local str: string
 	
-	if not self.TestDone.Value then
+	if not self.Done.Value then
 		str = "Test "..self.Name.." "
 
-		if self.TestResult.Value then
+		if self.Result.Value then
 			str..= "passed"
 		else
 			str..= "failed"
 		end
 
-		str ..= "\nTime: "..tostring(self.TestTime.Value)
+		str ..= "\nTime: "..tostring(self.Time.Value)
 	end
 
 	return str

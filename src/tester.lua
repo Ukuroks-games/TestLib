@@ -1,7 +1,3 @@
---	Сервисы
-
-
-
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 
@@ -19,9 +15,14 @@ local stdlib = require(Packages.stdlib)
 local algorithm = stdlib.algorithm
 
 
+--[[
+	Имя папки с тестами
+]]
+local TestFolderName = "Tests"
+
+
 
 local test = require(script.Parent.test)
-
 
 
 --[[
@@ -29,10 +30,18 @@ local test = require(script.Parent.test)
 ]]
 local tester = {}
 
+
+local function createTestsFolder(): Folder
+	local testsFolder = Instance.new("Folder", ReplicatedStorage)
+	testsFolder.Name = TestFolderName
+
+	return testsFolder
+end
+
 --[[
 	папка в которой лежат данные тестов
 ]]
-tester.testsFolder = ReplicatedStorage:FindFirstChild("Tests")
+tester.testsFolder = ReplicatedStorage:FindFirstChild(TestFolderName) or createTestsFolder
 
 tester.Tests = {}
 
@@ -49,7 +58,7 @@ function tester.PrintTestsResults(Tests: {test.test})
 		local num =	algorithm.count_if(
 			Tests, 
 			function(value: Folder): boolean 
-				local a = value:FindFirstChild("TestResult")
+				local a = value:FindFirstChild("Result")
 				return a.Value
 			end
 		)
@@ -65,13 +74,13 @@ function tester.PrintTestsResults(Tests: {test.test})
 		print("Tests failed:")
 
 		for _, v in pairs(Tests) do
-			if v:FindFirstChild("TestResult").Value == false then
+			if v:FindFirstChild("Result").Value == false then
 				print(v.Name)
 			end
 		end
 	end
 
-	print("Passed:"..tostring(passed).."/"..tostring(#Tests))
+	print("Passed:", tostring(passed), "/", #Tests)
 end
 
 --[[
@@ -93,7 +102,7 @@ function tester.Summary(self)
 
 	-- Если хоть один тест ещё запущен, ливаем
 	for _, v in pairs(tester.testsFolder:GetChildren()) do
-		local running = v:FindFirstChild("TestRunning")
+		local running = v:FindFirstChild("Running")
 			
 		if running then
 			if running.Value then
@@ -111,17 +120,11 @@ end
 --[[
 	Добавить тест
 ]]
-function tester.AddTest(testFunction: ()->boolean, TestName: string, depends: {test.test}?): test.test
+function tester.AddTest(self, testFunction: ()->boolean, TestName: string, depends: {test.test}?): test.test
 	
+	local Test = test.new(self.testsFolder, TestName, testFunction, depends)
 
-	if not tester.testsFolder then
-		tester.testsFolder = Instance.new("Folder", ReplicatedStorage)
-		tester.testsFolder.Name = "Tests"
-	end
-
-	local Test = test.new(tester.testsFolder, TestName, testFunction, depends)
-
-	table.insert(tester.Tests, Test)
+	table.insert(self.Tests, Test)
 
 	return Test
 end
