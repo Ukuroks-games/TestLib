@@ -2,9 +2,17 @@
 
 Small library for creating unit tests.
 
-see tests/test.server.lua
+## Why?
+
+I dont understand how use testez.
 
 ## Usage
+
+just add this lib in you dev-depends:  
+```
+[dev-dependincies]
+testlib = "egor00f/testlib@0.1.4"
+```
 
 add test:
 ```
