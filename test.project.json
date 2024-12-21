@@ -1,5 +1,5 @@
 {
-  "name": "TestLib test",
+  "name": "test",
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
@@ -7,9 +7,8 @@
       "Packages": {
         "$path": "Packages"
       },
-      "shared": {
-        "$path": "src"
-      }
+      "$ignoreUnknownInstances": true,
+      "$path": "src"
     },
     "Workspace": {
       "$className": "Workspace",

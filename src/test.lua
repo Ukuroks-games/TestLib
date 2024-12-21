@@ -67,8 +67,8 @@ function test.new(Parent: Folder, name: string, func: ()->boolean, depends: {tes
 			Func = func,
 			Result = Instance.new("BoolValue", testFolder),
 			Done = Instance.new("BoolValue", testFolder),
+			Running = Instance.new("BoolValue", testFolder),
 			Time = Instance.new("NumberValue", testFolder),
-			Running = Instance.new("NumberValue", testFolder),
 			testFolder = testFolder
 		},	testClass
 	)

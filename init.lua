@@ -1,1 +1,1 @@
-return require(script.Parent.src.tester)
+return require(script.src.testlib)

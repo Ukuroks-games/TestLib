@@ -30,19 +30,26 @@ local test = require(script.Parent.test)
 ]]
 local tester = {}
 
+tester.test = test
 
-local function createTestsFolder(): Folder
-	local testsFolder = Instance.new("Folder", ReplicatedStorage)
+--[[
+	Создать или найти папку с тестами
+]]
+local function CreateTestsFolder(): Folder
+	local testsFolder = ReplicatedStorage:FindFirstChild(TestFolderName) or Instance.new("Folder", ReplicatedStorage)
 	testsFolder.Name = TestFolderName
 
 	return testsFolder
 end
 
 --[[
-	папка в которой лежат данные тестов
+	# Папка в которой лежат данные тестов
 ]]
-tester.testsFolder = ReplicatedStorage:FindFirstChild(TestFolderName) or createTestsFolder
+tester.testsFolder = CreateTestsFolder()
 
+--[[
+	# Список тестов 
+]]
 tester.Tests = {}
 
 --[[
@@ -54,28 +61,23 @@ tester.Tests = {}
 ]]
 function tester.PrintTestsResults(Tests: {test.test})
 
-	local function GetPassedTestsNum()
-		local num =	algorithm.count_if(
-			Tests, 
-			function(value: Folder): boolean 
-				local a = value:FindFirstChild("Result")
-				return a.Value
-			end
-		)
-		
-		return num
-	end
+	-- кол-во успешных тестов
+	local passed = algorithm.count_if(
+		Tests, 
+		function(value: Folder): boolean 
+			local a = value:FindFirstChild("Result")
+			return a.Value
+		end
+	)
 
-	local passed = GetPassedTestsNum()
-
-	if passed == #Tests then
+	if passed == #Tests then	-- Все тесты пройдены
 		print("All test passed\n")
 	else
-		print("Tests failed:")
+		print("Failed tests:")
 
-		for _, v in pairs(Tests) do
+		for _, v in pairs(Tests) do	-- Вывод неудачных тестов
 			if v:FindFirstChild("Result").Value == false then
-				print(v.Name)
+				print("+", v.Name)
 			end
 		end
 	end
@@ -84,7 +86,9 @@ function tester.PrintTestsResults(Tests: {test.test})
 end
 
 --[[
-	вывести суммарную информацию о тестах
+	# Вывести суммарную информацию о тестах
+
+	если self == nil, то выводится информация о всех тестах
 ]]
 function tester.Summary(self)
 
@@ -104,7 +108,7 @@ function tester.Summary(self)
 	for _, v in pairs(tester.testsFolder:GetChildren()) do
 		local running = v:FindFirstChild("Running")
 			
-		if running then
+		if running then	-- Если оно вообще было найденно
 			if running.Value then
 				warn("Not all tests done!")
 				return
@@ -118,7 +122,15 @@ function tester.Summary(self)
 end
 
 --[[
-	Добавить тест
+	# Добавить тест
+
+	## Params:
+
+	`testFunction` - тестирующая функция
+
+	`TestName` - Имя теста
+
+	`depends` - зависимости теста, необязательно указывать
 ]]
 function tester.AddTest(self, testFunction: ()->boolean, TestName: string, depends: {test.test}?): test.test
 	

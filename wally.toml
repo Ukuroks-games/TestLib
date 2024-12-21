@@ -3,11 +3,10 @@ name = "egor00f/testlib"
 
 description = "Small unit tests library"
 
-version = "0.1.2"
+version = "0.1.4"
 
 registry = "https://github.com/UpliftGames/wally-index"
 
-# or server
 realm = "shared"
 
 license = "MIT"
