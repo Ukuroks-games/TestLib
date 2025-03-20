@@ -1,0 +1,54 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Install programs",
+            "detail": "Install programms using aftman",
+            "command": "aftman install && exit",
+            "group": {
+                "kind": "none"
+            },
+            "problemMatcher": [],
+        },
+        {
+            "type": "shell",
+            "label": "Load depends",
+            "command": "wally install && exit",
+            "group": {
+                "kind": "none"
+            },
+            "detail": "Install all project depends",
+            "problemMatcher": []
+        },
+        {
+            "type": "shell",
+            "label": "Build",
+            "detail": "Build tests place",
+            "command": "rojo build tests.project.json --output tests.rbxl && exit",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Generate sourcemap",
+            "detail": "Generate sourcemap for tests project",
+            "command": "rojo sourcemap tests.project.json --output sourcemap.json && exit",
+            "group": {
+                "kind": "none"
+            }
+        }
+    ],
+    "windows": {
+        "options": {
+            "shell": {
+                "executable": "cmd",
+                "args": [
+                    "/k"
+                ]
+            }
+        }
+    },
+    "version": "2.0.0"
+}
