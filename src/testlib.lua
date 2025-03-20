@@ -24,13 +24,28 @@ local TestFolderName = "Tests"
 
 local test = require(script.Parent.test)
 
+export type TestLib = {
+	Summary: (self: TestLib?) -> nil,
 
---[[
-	Тестироующая библиотека
-]]
-local tester = {}
+	--[[
+		# Добавить тест
 
-tester.test = test
+		## Params:
+
+		`testFunction` - тестирующая функция
+
+		`TestName` - Имя теста
+
+		`depends` - зависимости теста, необязательно указывать
+	]]
+	AddTest: (self: TestLib, Test: test.Test) -> test.Test,
+
+	Tests: { test.Test },
+
+	
+
+	test: typeof(test)
+}
 
 --[[
 	Создать или найти папку с тестами
@@ -45,100 +60,84 @@ end
 --[[
 	# Папка в которой лежат данные тестов
 ]]
-tester.testsFolder = CreateTestsFolder()
+local testsFolder = CreateTestsFolder()
+
 
 --[[
-	# Список тестов 
+	Тестироующая библиотека
 ]]
-tester.Tests = {}
+local tester = {
+	Summary = function (self: TestLib?)
 
---[[
-	# Вывести результаты тестов
+		local TestTable: {test.Test}
 
-	## Params:
-
-	`Tests` - Список тестов
-]]
-function tester.PrintTestsResults(Tests: {test.test})
-
-	-- кол-во успешных тестов
-	local passed = algorithm.count_if(
-		Tests, 
-		function(value: Folder): boolean 
-			local a = value:FindFirstChild("Result")
-			return a.Value
-		end
-	)
-
-	if passed == #Tests then	-- Все тесты пройдены
-		print("All test passed\n")
-	else
-		print("Failed tests:")
-
-		for _, v in pairs(Tests) do	-- Вывод неудачных тестов
-			if v:FindFirstChild("Result").Value == false then
-				print("+", v.Name)
+		if self then
+			TestTable = self.Tests
+		else
+			TestTable = {}
+			for _, v in pairs(testsFolder:GetChildren()) do
+				table.insert(TestTable, test.fromFolder(v))
 			end
 		end
-	end
 
-	print("Passed:", tostring(passed), "/", #Tests)
-end
-
---[[
-	# Вывести суммарную информацию о тестах
-
-	если self == nil, то выводится информация о всех тестах
-]]
-function tester.Summary(self)
-
-	local Tests = {}
-
-	if self then
-		Tests = self.Tests
-	else
-		local all:{Instance} = self.testsFolder:GetChildren()
-
-		for _, v in pairs(all) do
-			table.insert(Tests, test.fromFolder(v))
+		for _, v in pairs(TestTable) do
+			print(v)
 		end
-	end
 
-	-- Если хоть один тест ещё запущен, ливаем
-	for _, v in pairs(tester.testsFolder:GetChildren()) do
-		local running = v:FindFirstChild("Running")
+		print(
+			"Passed:",
+			algorithm.count_if(
+				TestTable, 
+				function(value) 
+					if value.Done.Value then
+						return value.Result.Value
+					end
+
+					return false
+				end
+			), 
+			'/', 
+			#TestTable
+		)
+
+	end,
+
+	AddTest = function(self: TestLib, Test: test.Test): test.Test
+
+		local TestFolder = Instance.new("Folder", testsFolder)
+		TestFolder.Name = Test.Name
+
+		for _, v in pairs(Test) do
+			if	typeof(v) == "NumberValue" or
+				typeof(v) == "BoolValue" 
+			then
+				v.Parent = TestFolder
+			end
+		end
+
+		table.insert(self.Tests, Test)
+
+		task.spawn(function()
+			local s, e = pcall(function() 
+				Test:Run()
+			end)
+
+			if not s then
+				Test.Result.Value = false
+				Test.Done.Value = true
+				Test.ErrorMsg = e
+			end
+
 			
-		if running then	-- Если оно вообще было найденно
-			if running.Value then
-				warn("Not all tests done!")
-				return
-			else
-				table.insert(Tests, v)
-			end
-		end
-	end
 
-	tester.PrintTestsResults(Tests)
-end
+		end)
 
---[[
-	# Добавить тест
+		return Test
+	end,
 
-	## Params:
+	Tests = {},
 
-	`testFunction` - тестирующая функция
-
-	`TestName` - Имя теста
-
-	`depends` - зависимости теста, необязательно указывать
-]]
-function tester.AddTest(self, testFunction: ()->boolean, TestName: string, depends: {test.test}?): test.test
-	
-	local Test = test.new(self.testsFolder, TestName, testFunction, depends)
-
-	table.insert(self.Tests, Test)
-
-	return Test
-end
+	test = test
+}
 
 return tester

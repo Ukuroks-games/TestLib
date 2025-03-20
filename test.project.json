@@ -7,8 +7,9 @@
       "Packages": {
         "$path": "Packages"
       },
-      "$ignoreUnknownInstances": true,
-      "$path": "src"
+      "shared": {
+        "$path": "src"
+      }
     },
     "Workspace": {
       "$className": "Workspace",
