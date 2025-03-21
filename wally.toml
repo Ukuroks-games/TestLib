@@ -20,7 +20,7 @@ exclude = ["TestLib test.rbxl", "test.project.json"]
 private = false
 
 [dependencies]
-stdlib = "egor00f/stdlib@0.1.9"
+stdlib = "egor00f/stdlib@>=0.1.9"
 
 [server-dependencies]
 

@@ -123,6 +123,11 @@ end
 ]]
 function testClass.Run(self: Test): boolean
 	
+	local function End()
+		self.Running.Value = false
+		self.Done.Value = true	-- Все! тест кончился
+	end
+
 	if self.Running.Value then	-- тест уже запущен
 		self.Result.Changed:Wait()	-- ждемс конца
 		return self.Result.Value
@@ -137,6 +142,8 @@ function testClass.Run(self: Test): boolean
 
 	for _, v in pairs(self.Depends) do	-- Запуск завивимостей
 		if not testClass.Run(v) then
+			self.ErrorMsg = "Depends fail"
+			End()
 			return false
 		end
 	end
@@ -159,12 +166,12 @@ function testClass.Run(self: Test): boolean
 	TimeEnd = os.clock()
 
 	self.Time.Value = os.difftime(TimeEnd, TimeStart)	-- расчёт времени функции
+
 	self.Result.Value = result
-	self.Running.Value = false
-	self.Done.Value = true	-- Все! тест кончился
+
+	End()
 
 	return result
-
 end
 
 function testClass.__tostring(self: Test): string
@@ -173,18 +180,21 @@ function testClass.__tostring(self: Test): string
 	
 	if self.Running.Value then
 		str ..= "still running"
+
 	elseif self.Done.Value then
 
 		if self.Result.Value then
 			str..= "passed"
 		else
 			str..= "failed"
+
 			if self.ErrorMsg then
-				str ..= "\n Error:" .. self.ErrorMsg
+				str ..= "\nError:" .. self.ErrorMsg
 			end
 		end
 
 		str ..= "\nTime: "..tostring(self.Time.Value)
+
 	else
 		str ..= "were not run yet"
 	end

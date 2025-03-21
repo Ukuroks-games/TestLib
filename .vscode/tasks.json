@@ -24,7 +24,7 @@
             "type": "shell",
             "label": "Build",
             "detail": "Build tests place",
-            "command": "rojo build tests.project.json --output tests.rbxl && exit",
+            "command": "rojo build test.project.json --output tests.rbxl && exit",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -34,7 +34,7 @@
             "type": "shell",
             "label": "Generate sourcemap",
             "detail": "Generate sourcemap for tests project",
-            "command": "rojo sourcemap tests.project.json --output sourcemap.json && exit",
+            "command": "rojo sourcemap test.project.json --output sourcemap.json && exit",
             "group": {
                 "kind": "none"
             }

@@ -25,24 +25,13 @@ local TestFolderName = "Tests"
 local test = require(script.Parent.test)
 
 export type TestLib = {
-	Summary: (self: TestLib?) -> nil,
+	Summary: (self: TestLib?) -> string,
 
-	--[[
-		# Добавить тест
+	PostSummary: (self: TestLib?) -> string,
 
-		## Params:
-
-		`testFunction` - тестирующая функция
-
-		`TestName` - Имя теста
-
-		`depends` - зависимости теста, необязательно указывать
-	]]
 	AddTest: (self: TestLib, Test: test.Test) -> test.Test,
 
 	Tests: { test.Test },
-
-	
 
 	test: typeof(test)
 }
@@ -62,82 +51,113 @@ end
 ]]
 local testsFolder = CreateTestsFolder()
 
+local function GetGlobalsTestsList(): { test.Test }
+	local TestTable = {}
+	for _, v in pairs(testsFolder:GetChildren()) do
+		table.insert(TestTable, test.fromFolder(v))
+	end
+
+	return TestTable
+end
+
+local function GetTests(self: TestLib?): { test.Test }
+	if self then
+		return self.Tests
+	else
+		return GetGlobalsTestsList()
+	end
+end
 
 --[[
 	Тестироующая библиотека
 ]]
 local tester = {
-	Summary = function (self: TestLib?)
-
-		local TestTable: {test.Test}
-
-		if self then
-			TestTable = self.Tests
-		else
-			TestTable = {}
-			for _, v in pairs(testsFolder:GetChildren()) do
-				table.insert(TestTable, test.fromFolder(v))
-			end
-		end
-
-		for _, v in pairs(TestTable) do
-			print(v)
-		end
-
-		print(
-			"Passed:",
-			algorithm.count_if(
-				TestTable, 
-				function(value) 
-					if value.Done.Value then
-						return value.Result.Value
-					end
-
-					return false
-				end
-			), 
-			'/', 
-			#TestTable
-		)
-
-	end,
-
-	AddTest = function(self: TestLib, Test: test.Test): test.Test
-
-		local TestFolder = Instance.new("Folder", testsFolder)
-		TestFolder.Name = Test.Name
-
-		for _, v in pairs(Test) do
-			if	typeof(v) == "NumberValue" or
-				typeof(v) == "BoolValue" 
-			then
-				v.Parent = TestFolder
-			end
-		end
-
-		table.insert(self.Tests, Test)
-
-		task.spawn(function()
-			local s, e = pcall(function() 
-				Test:Run()
-			end)
-
-			if not s then
-				Test.Result.Value = false
-				Test.Done.Value = true
-				Test.ErrorMsg = e
-			end
-
-			
-
-		end)
-
-		return Test
-	end,
-
 	Tests = {},
 
 	test = test
 }
+
+--[[
+
+]]
+function tester.Summary(self: TestLib?): string
+	
+	local TestTable = GetTests(self)
+	local str = ""
+
+	for _, v in pairs(TestTable) do
+		str ..= "\n" .. tostring(v)
+	end
+
+	str ..= "\nPassed: " ..
+		algorithm.count_if(
+			TestTable, 
+			function(value) 
+				if value.Done.Value then
+					return value.Result.Value
+				end
+
+				return false
+			end
+		) .. '/' .. #TestTable
+
+	return str
+end
+
+--[[
+
+]]
+function tester.PostSummary(self: TestLib?): string
+		
+	local tests = GetTests(self)
+
+	for _, v in pairs(tests) do
+		if not v.Done.Value then	-- if test not complited yet
+			v.Done.Changed:Wait()
+		end
+	end
+
+	return tester.Summary(self)
+end
+
+--[[
+	# Добавить тест
+
+	## Params:
+
+	`testFunction` - тестирующая функция
+
+	`TestName` - Имя теста
+
+	`depends` - зависимости теста, необязательно указывать
+]]
+function tester.AddTest(self: TestLib, Test: test.Test): test.Test
+
+	task.spawn(function()
+		local s, e = pcall(function() 
+			Test:Run()
+		end)
+
+		if not s then
+			Test.Result.Value = false
+			
+			Test.ErrorMsg = e
+		end
+
+		Test.Done.Value = true
+	end)
+
+	local TestFolder = Instance.new("Folder", testsFolder)
+	TestFolder.Name = Test.Name
+
+	Test.Running.Parent = TestFolder
+	Test.Done.Parent = TestFolder
+	Test.Time.Parent = TestFolder
+	Test.Result.Parent = TestFolder
+
+	table.insert(self.Tests, Test)
+
+	return Test
+end
 
 return tester

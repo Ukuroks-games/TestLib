@@ -11,6 +11,7 @@ local t = tester:AddTest(
 		end
 	)
 )
+
 tester:AddTest(
 	tester.test.new(
 		"True Test2",
@@ -19,6 +20,7 @@ tester:AddTest(
 		end
 	)
 )
+
 tester:AddTest(
 	tester.test.new(
 		"False Test1",
@@ -27,6 +29,7 @@ tester:AddTest(
 		end
 	)
 )
+
 tester:AddTest(
 	tester.test.new(
 		"False Test2",
@@ -35,6 +38,7 @@ tester:AddTest(
 		end
 	)
 )
+
 tester:AddTest(
 	tester.test.new(
 		"Depend Test",
@@ -47,8 +51,4 @@ tester:AddTest(
 	)
 )
 
--- Результаты только для тестов этого скрипта
-tester:Summary()
-
--- Вообще для всех тестов
-tester.Summary() 
+print("Tests summary:", tester:PostSummary())
