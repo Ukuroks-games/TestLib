@@ -3,75 +3,57 @@ local test = {}
 local testClass = {}
 testClass.__index = testClass
 
+export type TestData = {
+	--[[
+		Имя теста
+	]]
+	Name: string,
+
+	--[[
+		Зависимости теста
+	]]
+	Depends: { Test },
+
+	--[[
+		Функция теста
+	]]
+	Func: ()->boolean,
+		
+	--[[
+		Результат теста.
+		Имеет значение только после того как тест был выполнен
+	]]
+	Result: BoolValue,
+
+	--[[
+		Завершился ли тест
+	]]
+	Done: BoolValue,
+
+	--[[
+		Запущен ли сейчас тест
+	]]
+	Running: BoolValue,
+
+	--[[
+		Время выполнения теста
+	]]
+	Time: NumberValue,
+
+	ErrorMsg: string
+}
 --[[
 	# Тест
 ]]
-export type test = typeof(setmetatable(
-	{} :: {
-		--[[
-			Имя теста
-		]]
-		Name: string,
-
-		--[[
-			Зависимости теста
-		]]
-		Depends: {test},
-
-		--[[
-			Функция теста
-		]]
-		Func: ()->boolean,
-
-		--[[
-			папка теста
-		]]
-		Folder: Folder,
-		
-		--[[
-			Результат теста.
-			Имеет значение только после того как тест был выполнен
-		]]
-		Result: BoolValue,
-
-		--[[
-			Завершился ли тест
-		]]
-		Done: BoolValue,
-
-		--[[
-			Запущен ли сейчас тест
-		]]
-		Running: BoolValue,
-
-		--[[
-			Время выполнения теста
-		]]
-		Time: NumberValue
-	}, 
+export type Test = typeof(setmetatable(
+	{} :: 
+	TestData, 
 	testClass
 ))
 
---[[
-	# Создать тест
-]]
-function test.new(Parent: Folder, name: string, func: ()->boolean, depends: {test}?): test
+function configure(self: TestData): Test
 
-	local testFolder = Instance.new("Folder", Parent)
-	testFolder.Name = name
-
-	local self = setmetatable(
-		{
-			Name = name,
-			Depends = depends or {},
-			Func = func,
-			Result = Instance.new("BoolValue", testFolder),
-			Done = Instance.new("BoolValue", testFolder),
-			Running = Instance.new("BoolValue", testFolder),
-			Time = Instance.new("NumberValue", testFolder),
-			testFolder = testFolder
-		},	testClass
-	)
+	setmetatable(self, testClass)	-- add methods
 
 	self.Result.Name = "Result"
 	self.Done.Name = "Done"
@@ -88,11 +70,30 @@ function test.new(Parent: Folder, name: string, func: ()->boolean, depends: {tes
 		end
 	end)
 
-	self.Result.Changed:Connect(function() 
+	self.Done.Changed:Connect(function() 
 		print(tostring(self))
 	end)
 
 	return self
+end
+
+--[[
+	# Создать тест
+]]
+function test.new( name: string, func: () -> boolean, depends: { Test }?): Test
+
+	return configure(
+		{
+			Name = name,
+			Depends = depends or {},
+			Func = func,
+			Result = Instance.new("BoolValue"),
+			Done = Instance.new("BoolValue"),
+			Running = Instance.new("BoolValue"),
+			Time = Instance.new("NumberValue"),
+			ErrorMsg = nil
+		}
+	)
 end
 
 --[[
@@ -102,30 +103,33 @@ end
 
 	создаёт обрезаный тест (без функции и зависимостей)
 ]]
-function test.fromFolder(folder: Folder): test
-
-	local self = setmetatable(
+function test.fromFolder(folder: Folder): Test
+	return configure(
 		{
+			Func = nil,
+			Depends = {},
 			Name = folder.Name,
 			Result = folder:FindFirstChild("Result"),
 			Done = folder:FindFirstChild("Running"),
 			Time = folder:FindFirstChild("Time"),
 			Running = folder:FindFirstChild("Running"),
-			testFolder = folder
-		}, 
-		test
+			ErrorMsg = nil
+		}
 	)
-
-	return self
 end
 
 --[[
 	# Запустить тест
 ]]
-function testClass.Run(self: test): boolean
+function testClass.Run(self: Test): boolean
 	
+	local function End()
+		self.Running.Value = false
+		self.Done.Value = true	-- Все! тест кончился
+	end
+
 	if self.Running.Value then	-- тест уже запущен
-		self.Result.Changed:Wait()	-- ждемс конца
+		self.Done.Changed:Wait()	-- ждемс конца
 		return self.Result.Value
 	end
 
@@ -138,6 +142,8 @@ function testClass.Run(self: test): boolean
 
 	for _, v in pairs(self.Depends) do	-- Запуск завивимостей
 		if not testClass.Run(v) then
+			self.ErrorMsg = "Depends fail"
+			End()
 			return false
 		end
 	end
@@ -153,35 +159,44 @@ function testClass.Run(self: test): boolean
 	local TimeEnd: number
 
 
-	TimeStart = os.time()
+	TimeStart = os.clock()
 
 	result = self.Func()	-- Запуск функции
 
-	TimeEnd = os.time()
+	TimeEnd = os.clock()
 
 	self.Time.Value = os.difftime(TimeEnd, TimeStart)	-- расчёт времени функции
+
 	self.Result.Value = result
-	self.Running.Value = false
-	self.Done.Value = true	-- Все! тест кончился
+
+	End()
 
 	return result
-
 end
 
-function testClass.__tostring(self: test)
+function testClass.__tostring(self: Test): string
 	
-	local str: string
+	local str = "Test "..self.Name.." "
 	
-	if not self.Done.Value then
-		str = "Test "..self.Name.." "
+	if self.Running.Value then
+		str ..= "still running"
+
+	elseif self.Done.Value then
 
 		if self.Result.Value then
 			str..= "passed"
 		else
 			str..= "failed"
+
+			if self.ErrorMsg then
+				str ..= "\nError:" .. self.ErrorMsg
+			end
 		end
 
 		str ..= "\nTime: "..tostring(self.Time.Value)
+
+	else
+		str ..= "were not run yet"
 	end
 
 	return str
