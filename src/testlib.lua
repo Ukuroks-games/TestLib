@@ -37,6 +37,15 @@ export type TestLib = {
 }
 
 --[[
+	Тестироующая библиотека
+]]
+local tester = {
+	Tests = {},
+
+	test = test
+}
+
+--[[
 	Создать или найти папку с тестами
 ]]
 local function CreateTestsFolder(): Folder
@@ -51,10 +60,21 @@ end
 ]]
 local testsFolder = CreateTestsFolder()
 
-local function GetGlobalsTestsList(): { test.Test }
+local function GetTestsList(TestsNames: { string }?): { test.Test }
 	local TestTable = {}
-	for _, v in pairs(testsFolder:GetChildren()) do
+
+	local function insert(v: Folder)
 		table.insert(TestTable, test.fromFolder(v))
+	end
+	
+	for _, v in pairs(testsFolder:GetChildren()) do
+		if TestsNames then
+			if table.find(TestsNames, v.Name) then
+				insert(v)
+			end
+		else
+			insert(v)
+		end
 	end
 
 	return TestTable
@@ -64,18 +84,9 @@ local function GetTests(self: TestLib?): { test.Test }
 	if self then
 		return self.Tests
 	else
-		return GetGlobalsTestsList()
+		return GetTestsList()
 	end
 end
-
---[[
-	Тестироующая библиотека
-]]
-local tester = {
-	Tests = {},
-
-	test = test
-}
 
 --[[
 

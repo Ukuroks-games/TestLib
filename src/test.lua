@@ -70,7 +70,7 @@ function configure(self: TestData): Test
 		end
 	end)
 
-	self.Result.Changed:Connect(function() 
+	self.Done.Changed:Connect(function() 
 		print(tostring(self))
 	end)
 
@@ -129,7 +129,7 @@ function testClass.Run(self: Test): boolean
 	end
 
 	if self.Running.Value then	-- тест уже запущен
-		self.Result.Changed:Wait()	-- ждемс конца
+		self.Done.Changed:Wait()	-- ждемс конца
 		return self.Result.Value
 	end
 
