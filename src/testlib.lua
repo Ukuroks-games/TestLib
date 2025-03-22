@@ -153,9 +153,9 @@ function tester.AddTest(self: TestLib, Test: test.Test): test.Test
 			Test.Result.Value = false
 			
 			Test.ErrorMsg = e
-		end
 
-		Test.Done.Value = true
+			Test.Done.Value = true
+		end
 	end)
 
 	local TestFolder = Instance.new("Folder", testsFolder)

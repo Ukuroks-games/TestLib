@@ -45,15 +45,37 @@ export type TestData = {
 --[[
 	# Тест
 ]]
-export type Test = typeof(setmetatable(
-	{} :: 
-	TestData, 
-	testClass
-))
+export type Test = typeof(
+	setmetatable(
+		{} :: TestData, 
+		testClass
+	)
+)
 
 function configure(self: TestData): Test
 
 	setmetatable(self, testClass)	-- add methods
+
+	return self
+end
+
+--[[
+	# Создать тест
+]]
+function test.new( name: string, func: () -> boolean, depends: { Test }?): Test
+
+	local self = configure(
+		{
+			Name = name,
+			Depends = depends or {},
+			Func = func,
+			Result = Instance.new("BoolValue"),
+			Done = Instance.new("BoolValue"),
+			Running = Instance.new("BoolValue"),
+			Time = Instance.new("NumberValue"),
+			ErrorMsg = nil
+		}
+	)
 
 	self.Result.Name = "Result"
 	self.Done.Name = "Done"
@@ -66,34 +88,16 @@ function configure(self: TestData): Test
 
 	self.Running.Changed:Connect(function(newValue: boolean) 
 		if newValue then
-			print("Test "..tostring(self.Name).." started")
+			print("Test " .. self.Name .. " started")
 		end
 	end)
 
 	self.Done.Changed:Connect(function() 
-		print(tostring(self))
+		print(self)
 	end)
 
 	return self
-end
 
---[[
-	# Создать тест
-]]
-function test.new( name: string, func: () -> boolean, depends: { Test }?): Test
-
-	return configure(
-		{
-			Name = name,
-			Depends = depends or {},
-			Func = func,
-			Result = Instance.new("BoolValue"),
-			Done = Instance.new("BoolValue"),
-			Running = Instance.new("BoolValue"),
-			Time = Instance.new("NumberValue"),
-			ErrorMsg = nil
-		}
-	)
 end
 
 --[[
@@ -122,7 +126,7 @@ end
 	# Запустить тест
 ]]
 function testClass.Run(self: Test): boolean
-	
+
 	local function End()
 		self.Running.Value = false
 		self.Done.Value = true	-- Все! тест кончился
@@ -137,7 +141,7 @@ function testClass.Run(self: Test): boolean
 		return self.Result.Value
 	end
 
-	
+
 	self.Running.Value = true
 
 	for _, v in pairs(self.Depends) do	-- Запуск завивимостей
@@ -165,7 +169,7 @@ function testClass.Run(self: Test): boolean
 
 	TimeEnd = os.clock()
 
-	self.Time.Value = os.difftime(TimeEnd, TimeStart)	-- расчёт времени функции
+	self.Time.Value = TimeEnd - TimeStart	-- расчёт времени функции
 
 	self.Result.Value = result
 
@@ -176,7 +180,7 @@ end
 
 function testClass.__tostring(self: Test): string
 	
-	local str = "Test "..self.Name.." "
+	local str = "Test ".. self.Name .. " "
 	
 	if self.Running.Value then
 		str ..= "still running"
@@ -193,7 +197,7 @@ function testClass.__tostring(self: Test): string
 			end
 		end
 
-		str ..= "\nTime: "..tostring(self.Time.Value)
+		str ..= "\n	Time: " .. tostring(self.Time.Value) .. " sec"
 
 	else
 		str ..= "were not run yet"

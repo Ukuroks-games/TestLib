@@ -3,7 +3,7 @@ name = "egor00f/testlib"
 
 description = "Small unit tests library"
 
-version = "1.0.0"
+version = "1.0.1"
 
 registry = "https://github.com/UpliftGames/wally-index"
 
@@ -15,7 +15,9 @@ repository = "https://github.com/Ukuroks-games/TestLib"
 
 authors = ["Egor00f <velikiydolbayeb@gmail.com>"]
 
-exclude = ["TestLib test.rbxl", "test.project.json"]
+include = ["src", "src/**", "wally.toml", "README.md", "init.lua"]
+
+exclude = ["*"]
 
 private = false
 
