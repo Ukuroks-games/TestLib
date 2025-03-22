@@ -18,5 +18,8 @@ jobs:
       - name: Install Aftman
         uses: ok-nick/setup-aftman@v0.4.2
 
+      - name: Login
+        run: wally login
+
       - name: Publish
         run: wally publish
