@@ -38,6 +38,16 @@
             "group": {
                 "kind": "none"
             }
+        },
+        {
+            "type": "shell",
+            "label": "Publish",
+            "command": "wally publish && exit",
+            "group": {
+                "kind": "none"
+            },
+            "detail": "Install all project depends",
+            "problemMatcher": []
         }
     ],
     "windows": {
