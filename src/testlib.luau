@@ -3,14 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 --	Библиотеки
 
-
---[[ 
-	Папка с пакетами 
-]]
-local Packages = ReplicatedStorage.Packages
-
-
-local stdlib = require(Packages.stdlib)
+local stdlib = require(script.Parent.Parent.stdlib)
 
 local algorithm = stdlib.algorithm
 

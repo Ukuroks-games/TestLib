@@ -15,9 +15,10 @@ repository = "https://github.com/Ukuroks-games/TestLib"
 
 authors = ["Egor00f <velikiydolbayeb@gmail.com>"]
 
-include = ["src", "src/**", "wally.toml", "README.md", "init.lua"]
+exclude = [
+	"html"
+]
 
-exclude = ["*"]
 
 private = false
 
