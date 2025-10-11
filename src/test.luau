@@ -19,7 +19,7 @@ export type TestData = {
 	--[[
 		Функция теста
 	]]
-	Func: () -> boolean,
+	Func: (() -> boolean)?,
 
 	--[[
 		Результат теста.
@@ -42,7 +42,7 @@ export type TestData = {
 	]]
 	Time: NumberValue,
 
-	ErrorMsg: string,
+	ErrorMsg: string?,
 }
 --[[
 	# Тест
@@ -104,10 +104,10 @@ function test.fromFolder(folder: Folder): Test
 		Func = nil,
 		Depends = {},
 		Name = folder.Name,
-		Result = folder:FindFirstChild("Result"),
-		Done = folder:FindFirstChild("Running"),
-		Time = folder:FindFirstChild("Time"),
-		Running = folder:FindFirstChild("Running"),
+		Result = folder:FindFirstChild("Result") :: BoolValue,
+		Done = folder:FindFirstChild("Running") :: BoolValue,
+		Time = folder:FindFirstChild("Time") :: NumberValue,
+		Running = folder:FindFirstChild("Running") :: BoolValue,
 		ErrorMsg = nil,
 	})
 end
@@ -149,11 +149,15 @@ function testClass.Run(self: Test): boolean
 	-- время конца функции
 	local TimeEnd: number
 
-	TimeStart = os.clock()
+	if self.Func then
+		TimeStart = os.clock()
 
-	result = self.Func() -- Запуск функции
+		result = self.Func() -- Запуск функции
 
-	TimeEnd = os.clock()
+		TimeEnd = os.clock()
+	else
+		warn("Test func is nil")
+	end
 
 	self.Time.Value = TimeEnd - TimeStart -- расчёт времени функции
 
