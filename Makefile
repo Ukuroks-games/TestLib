@@ -1,7 +1,7 @@
 ##### CONFIG #############
 
 
-LIBNAME = yourLibName
+LIBNAME = test
 
 PACKAGE_NAME = $(LIBNAME)lib.zip
 
@@ -12,10 +12,11 @@ RBXM_BUILD = $(LIBNAME)lib.rbxm
 
 SOURCES = \
 	src/init.luau	\
-	src/module/init.luau
+	src/test.luau	\
+	src/testlib.luau
 
 TEST_SOURCES = \
-	tests/test.client.luau
+	tests/test.server.luau
 
 ROJO_PROJECTS=projects
 

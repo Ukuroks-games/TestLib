@@ -17,8 +17,8 @@ export type TestData = {
 	--[[
 		Функция теста
 	]]
-	Func: ()->boolean,
-		
+	Func: () -> boolean,
+
 	--[[
 		Результат теста.
 		Имеет значение только после того как тест был выполнен
@@ -40,21 +40,15 @@ export type TestData = {
 	]]
 	Time: NumberValue,
 
-	ErrorMsg: string
+	ErrorMsg: string,
 }
 --[[
 	# Тест
 ]]
-export type Test = typeof(
-	setmetatable(
-		{} :: TestData, 
-		testClass
-	)
-)
+export type Test = typeof(setmetatable({} :: TestData, testClass))
 
 function configure(self: TestData): Test
-
-	setmetatable(self, testClass)	-- add methods
+	setmetatable(self, testClass) -- add methods
 
 	return self
 end
@@ -62,20 +56,17 @@ end
 --[[
 	# Создать тест
 ]]
-function test.new( name: string, func: () -> boolean, depends: { Test }?): Test
-
-	local self = configure(
-		{
-			Name = name,
-			Depends = depends or {},
-			Func = func,
-			Result = Instance.new("BoolValue"),
-			Done = Instance.new("BoolValue"),
-			Running = Instance.new("BoolValue"),
-			Time = Instance.new("NumberValue"),
-			ErrorMsg = nil
-		}
-	)
+function test.new(name: string, func: () -> boolean, depends: { Test }?): Test
+	local self = configure({
+		Name = name,
+		Depends = depends or {},
+		Func = func,
+		Result = Instance.new("BoolValue"),
+		Done = Instance.new("BoolValue"),
+		Running = Instance.new("BoolValue"),
+		Time = Instance.new("NumberValue"),
+		ErrorMsg = nil,
+	})
 
 	self.Result.Name = "Result"
 	self.Done.Name = "Done"
@@ -86,18 +77,17 @@ function test.new( name: string, func: () -> boolean, depends: { Test }?): Test
 	self.Running.Value = false
 	self.Done.Value = false
 
-	self.Running.Changed:Connect(function(newValue: boolean) 
+	self.Running.Changed:Connect(function(newValue: boolean)
 		if newValue then
 			print("Test " .. self.Name .. " started")
 		end
 	end)
 
-	self.Done.Changed:Connect(function() 
+	self.Done.Changed:Connect(function()
 		print(self)
 	end)
 
 	return self
-
 end
 
 --[[
@@ -108,50 +98,45 @@ end
 	создаёт обрезаный тест (без функции и зависимостей)
 ]]
 function test.fromFolder(folder: Folder): Test
-	return configure(
-		{
-			Func = nil,
-			Depends = {},
-			Name = folder.Name,
-			Result = folder:FindFirstChild("Result"),
-			Done = folder:FindFirstChild("Running"),
-			Time = folder:FindFirstChild("Time"),
-			Running = folder:FindFirstChild("Running"),
-			ErrorMsg = nil
-		}
-	)
+	return configure({
+		Func = nil,
+		Depends = {},
+		Name = folder.Name,
+		Result = folder:FindFirstChild("Result"),
+		Done = folder:FindFirstChild("Running"),
+		Time = folder:FindFirstChild("Time"),
+		Running = folder:FindFirstChild("Running"),
+		ErrorMsg = nil,
+	})
 end
 
 --[[
 	# Запустить тест
 ]]
 function testClass.Run(self: Test): boolean
-
 	local function End()
 		self.Running.Value = false
-		self.Done.Value = true	-- Все! тест кончился
+		self.Done.Value = true -- Все! тест кончился
 	end
 
-	if self.Running.Value then	-- тест уже запущен
-		self.Done.Changed:Wait()	-- ждемс конца
+	if self.Running.Value then -- тест уже запущен
+		self.Done.Changed:Wait() -- ждемс конца
 		return self.Result.Value
 	end
 
-	if self.Done.Value then	-- тест уже БЫЛ запущен
+	if self.Done.Value then -- тест уже БЫЛ запущен
 		return self.Result.Value
 	end
-
 
 	self.Running.Value = true
 
-	for _, v in pairs(self.Depends) do	-- Запуск завивимостей
+	for _, v in pairs(self.Depends) do -- Запуск завивимостей
 		if not testClass.Run(v) then
 			self.ErrorMsg = "Depends fail"
 			End()
 			return false
 		end
 	end
-
 
 	-- Результат запуска теста
 	local result: boolean
@@ -162,14 +147,13 @@ function testClass.Run(self: Test): boolean
 	-- время конца функции
 	local TimeEnd: number
 
-
 	TimeStart = os.clock()
 
-	result = self.Func()	-- Запуск функции
+	result = self.Func() -- Запуск функции
 
 	TimeEnd = os.clock()
 
-	self.Time.Value = TimeEnd - TimeStart	-- расчёт времени функции
+	self.Time.Value = TimeEnd - TimeStart -- расчёт времени функции
 
 	self.Result.Value = result
 
@@ -179,18 +163,15 @@ function testClass.Run(self: Test): boolean
 end
 
 function testClass.__tostring(self: Test): string
-	
-	local str = "Test ".. self.Name .. " "
-	
+	local str = "Test " .. self.Name .. " "
+
 	if self.Running.Value then
 		str ..= "still running"
-
 	elseif self.Done.Value then
-
 		if self.Result.Value then
-			str..= "passed"
+			str ..= "passed"
 		else
-			str..= "failed"
+			str ..= "failed"
 
 			if self.ErrorMsg then
 				str ..= "\nError:" .. self.ErrorMsg
@@ -198,7 +179,6 @@ function testClass.__tostring(self: Test): string
 		end
 
 		str ..= "\n	Time: " .. tostring(self.Time.Value) .. " sec"
-
 	else
 		str ..= "were not run yet"
 	end

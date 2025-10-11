@@ -1,3 +1,4 @@
-syntax = "luau"
+syntax = "Luau"
 indent_type = "Tabs"
+column_width = 80
 

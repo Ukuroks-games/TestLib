@@ -1,0 +1,20 @@
+{
+	"name": "Testlib tests",
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"$className": "ReplicatedStorage",
+			"Packages": {
+				"$path": "Packages",
+				"testlib": {
+					"$path": "src"
+				}
+			},
+			"$ignoreUnknownInstances": true
+		},
+		"Workspace": {
+			"$className": "Workspace",
+			"$path": "tests"
+		}
+	}
+}
