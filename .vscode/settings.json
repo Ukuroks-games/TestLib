@@ -20,7 +20,8 @@
 		"rojo",
 		"setmetatable",
 		"stdlib",
-		"Testlib"
+		"Testlib",
+		"tostring"
 	],
 
 	"cSpell.ignorePaths": [
@@ -34,4 +35,7 @@
 	"luau-lsp.sourcemap.rojoProjectFile": "test.project.json",
 	"luau-lsp.sourcemap.useVSCodeWatcher": true,
 	"luau-lsp.sourcemap.generatorCommand": "make sourcemap",
+	"[toml]": {
+		"editor.defaultFormatter": "tamasfe.even-better-toml"
+	},
 }

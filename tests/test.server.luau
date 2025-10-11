@@ -1,6 +1,8 @@
+--!strict
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local tester = require(ReplicatedStorage.shared.testlib)
+local tester = require(ReplicatedStorage.Packages.testlib)
 
 
 local t = tester:AddTest(

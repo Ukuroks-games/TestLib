@@ -1,3 +1,5 @@
+--!strict
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 --	Библиотеки
@@ -13,48 +15,31 @@ local TestFolderName = "Tests"
 
 local test = require(script.Parent.test)
 
-export type TestLib = {
-	Summary: (self: TestLib?) -> string,
-
-	PostSummary: (self: TestLib?) -> string,
-
-	AddTest: (self: TestLib, Test: test.Test) -> test.Test,
-
-	Tests: { test.Test },
-
-	test: typeof(test),
-}
-
 --[[
 	Тестироующая библиотека
 ]]
 local tester = {
 	Tests = {},
-
-	test = test,
 }
 
---[[
-	Создать или найти папку с тестами
-]]
-local function CreateTestsFolder(): Folder
-	local testsFolder = ReplicatedStorage:FindFirstChild(TestFolderName)
-		or Instance.new("Folder", ReplicatedStorage)
-	testsFolder.Name = TestFolderName
-
-	return testsFolder
-end
+export type TestLib = typeof(tester)
 
 --[[
 	# Папка в которой лежат данные тестов
 ]]
-local testsFolder = CreateTestsFolder()
+local testsFolder = stdlib.utility.CreateOrFindInstance(
+	TestFolderName,
+	"Folder",
+	ReplicatedStorage
+) :: Folder
 
 local function GetTestsList(TestsNames: { string }?): { test.Test }
 	local TestTable = {}
 
-	local function insert(v: Folder)
-		table.insert(TestTable, test.fromFolder(v))
+	local function insert(v: Instance)
+		if v.ClassName == "Folder" then
+			table.insert(TestTable, test.fromFolder(v :: Folder))
+		end
 	end
 
 	for _, v in pairs(testsFolder:GetChildren()) do
@@ -70,19 +55,23 @@ local function GetTestsList(TestsNames: { string }?): { test.Test }
 	return TestTable
 end
 
-local function GetTests(self: TestLib?): { test.Test }
+function tester.GetTests(self: TestLib?, list: { string }?): { test.Test }
 	if self then
-		return self.Tests
+		if list then
+			return stdlib.algorithm.get_keys_values(self.Tests, list)
+		else
+			return self.Tests
+		end
 	else
-		return GetTestsList()
+		return GetTestsList(list)
 	end
 end
 
 --[[
-
+	print summary
 ]]
-function tester.Summary(self: TestLib?): string
-	local TestTable = GetTests(self)
+function tester.Summary(self: TestLib?, list: { string }?): string
+	local TestTable = (self or tester):GetTests(list)
 	local str = ""
 
 	for _, v in pairs(TestTable) do
@@ -101,18 +90,20 @@ function tester.Summary(self: TestLib?): string
 end
 
 --[[
+	Run summary after all tests done.
 
+	Waiting tests.
 ]]
-function tester.PostSummary(self: TestLib?): string
-	local tests = GetTests(self)
+function tester.PostSummary(self: TestLib?, list: {string}?): string
+	local tests = (self or tester):GetTests(list)
 
 	for _, v in pairs(tests) do
-		if not v.Done.Value then -- if test not complited yet
+		if not v.Done.Value then -- if test not completed yet
 			v.Done.Changed:Wait()
 		end
 	end
 
-	return tester.Summary(self)
+	return tester.Summary(self, list)
 end
 
 --[[
@@ -141,7 +132,8 @@ function tester.AddTest(self: TestLib, Test: test.Test): test.Test
 		end
 	end)
 
-	local TestFolder = Instance.new("Folder", testsFolder)
+	local TestFolder = Instance.new("Folder")
+	TestFolder.Parent = testsFolder
 	TestFolder.Name = Test.Name
 
 	Test.Running.Parent = TestFolder
